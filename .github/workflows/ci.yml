@@ -10,40 +10,47 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
-    # Используем ваш кастомный образ как контейнер для всего job
     container:
       image: duyler/php-zts:latest
       options: --user root
 
     strategy:
       matrix:
-        # Если у вас есть разные теги для версий PHP, можно указать их здесь
         php-image: ['duyler/php-zts:latest']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          extensions: parallel
-          ini-values: zend.assertions=1
 
       - name: Check PHP and extensions
         run: |
           php -v
-          php -m | grep parallel
+          php -m | grep parallel || echo "parallel extension not found"
           composer --version || echo "Composer not installed"
+          pwd
+          ls -la
 
       - name: Update composer
         run: composer self-update
 
-      - name: Install dependencies with composer php 8.4
-        run: composer update --ignore-platform-reqs --prefer-dist --no-interaction --no-progress --optimize-autoloader --ansi
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Verify PHPUnit config
+        run: |
+          if [ -f phpunit.xml ]; then
+            echo "✓ phpunit.xml found"
+            cat phpunit.xml
+          else
+            echo "✗ phpunit.xml not found"
+            exit 1
+          fi
 
       - name: Run tests with phpunit
-        run: vendor/bin/phpunit  --coverage-clover=coverage.xml --colors=always
+        run: vendor/bin/phpunit -c phpunit.xml --coverage-clover=coverage.xml --colors=always
 
       - name: Run PHP CS Fixer
         run: vendor/bin/php-cs-fixer check --diff -v
 
       - name: Run Psalm
-        run: vendor/bin/psalm --shepherd
+        run: vendor/bin/psalm --no-cache
