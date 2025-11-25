@@ -7,15 +7,17 @@ namespace Duyler\Parallel\Test\Integration;
 use Duyler\Parallel\Channel;
 use Duyler\Parallel\Events;
 use Duyler\Parallel\Runtime;
+use Duyler\Parallel\Test\RuntimeTestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ParallelWorkflowTest extends TestCase
 {
+    use RuntimeTestHelper;
     #[Test]
     public function complete_workflow_with_runtime_and_future(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
 
         $future1 = $runtime->run(function () {
             return 1 + 1;
@@ -64,18 +66,28 @@ final class ParallelWorkflowTest extends TestCase
     #[Test]
     public function named_channels_between_tasks(): void
     {
-        $channelName = 'test_channel_' . uniqid();
-        $channel = Channel::make($channelName, 10);
+        $inputChannel = 'input_' . uniqid();
+        $outputChannel = 'output_' . uniqid();
 
-        $runtime = new Runtime();
-        $future = $runtime->run(function ($name) {
-            $ch = \parallel\Channel::open($name);
-            $value = $ch->recv();
-            $ch->send($value * 2);
-        }, [$channelName]);
+        Channel::make($inputChannel, 10);
+        Channel::make($outputChannel, 10);
 
-        $channel->send(21);
-        $result = $channel->recv();
+        $runtime = $this->createRuntime();
+        $future = $runtime->run(function ($input, $output) {
+            $chIn = \parallel\Channel::open($input);
+            $chOut = \parallel\Channel::open($output);
+
+            $value = $chIn->recv();
+            $chOut->send($value * 2);
+        }, [$inputChannel, $outputChannel]);
+
+        $input = Channel::open($inputChannel);
+        $output = Channel::open($outputChannel);
+
+        $input->send(21);
+        $result = $output->recv();
+
+        $future->value();
 
         $this->assertEquals(42, $result);
     }
@@ -83,7 +95,7 @@ final class ParallelWorkflowTest extends TestCase
     #[Test]
     public function multiple_tasks_with_same_runtime(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
 
         $futures = [];
         for ($i = 1; $i <= 5; $i++) {

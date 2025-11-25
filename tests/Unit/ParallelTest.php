@@ -9,11 +9,25 @@ use Duyler\Parallel\Contract\EventsInterface;
 use Duyler\Parallel\Contract\FutureInterface;
 use Duyler\Parallel\Contract\RuntimeInterface;
 use Duyler\Parallel\Parallel;
+use Duyler\Parallel\Test\RuntimeTestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ParallelTest extends TestCase
 {
+    use RuntimeTestHelper;
+
+    protected function setUp(): void
+    {
+        Parallel::setDefaultBootstrap($this->getBootstrapPath());
+    }
+
+    protected function tearDown(): void
+    {
+        Parallel::closePool();
+        Parallel::setDefaultBootstrap(null);
+    }
+
     #[Test]
     public function runtime_creates_new_runtime(): void
     {

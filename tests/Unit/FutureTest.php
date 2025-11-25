@@ -8,17 +8,18 @@ use Duyler\Parallel\Contract\FutureInterface;
 use Duyler\Parallel\Exception\CancellationException;
 use Duyler\Parallel\Exception\ForeignException;
 use Duyler\Parallel\Future;
-use Duyler\Parallel\Runtime;
+use Duyler\Parallel\Test\RuntimeTestHelper;
 use Exception;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class FutureTest extends TestCase
 {
+    use RuntimeTestHelper;
     #[Test]
     public function get_value_from_completed_future(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 'result';
         });
@@ -29,7 +30,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function get_array_value_from_future(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return ['key' => 'value'];
         });
@@ -40,7 +41,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function get_null_value_from_future(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return null;
         });
@@ -51,7 +52,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function done_returns_true_for_completed_task(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 1;
         });
@@ -64,7 +65,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function cancel_future(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             sleep(10);
             return 1;
@@ -79,7 +80,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function cancelled_returns_true_after_cancel(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             sleep(10);
             return 1;
@@ -94,7 +95,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function cancelled_returns_false_for_running_task(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 1;
         });
@@ -105,7 +106,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function value_throws_exception_when_cancelled(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             sleep(10);
             return 1;
@@ -121,7 +122,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function value_propagates_exception_from_task(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             throw new Exception('Task error');
         });
@@ -133,7 +134,7 @@ final class FutureTest extends TestCase
     #[Test]
     public function future_implements_interface(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 1;
         });

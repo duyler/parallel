@@ -2,7 +2,7 @@
 
 namespace parallel {
     class Runtime {
-        public function __construct(?string $bootstrap = null) {}
+        public function __construct(string $bootstrap = '') {}
         public function run(\Closure $task, array $argv = []): Future {}
         public function close(): void {}
         public function kill(): void {}
@@ -55,6 +55,7 @@ namespace parallel\Runtime\Error {
 }
 
 namespace parallel\Future\Error {
+    class Cancelled extends \Exception {}
     class Cancellation extends \Exception {}
     class Foreign extends \Exception {}
     class Killed extends \Exception {}

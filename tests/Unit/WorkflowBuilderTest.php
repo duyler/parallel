@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Duyler\Parallel\Test\Unit;
 
+use Duyler\Parallel\Test\RuntimeTestHelper;
 use Duyler\Parallel\WorkflowBuilder;
 use Duyler\Parallel\WorkflowResult;
 use PHPUnit\Framework\Attributes\Test;
@@ -11,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class WorkflowBuilderTest extends TestCase
 {
+    use RuntimeTestHelper;
     #[Test]
     public function create_builder(): void
     {
@@ -23,6 +25,7 @@ final class WorkflowBuilderTest extends TestCase
     public function build_workflow_with_single_task(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addTask('task1', fn() => 42)
             ->execute();
 
@@ -34,6 +37,7 @@ final class WorkflowBuilderTest extends TestCase
     public function build_workflow_with_multiple_tasks(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addTask('sum', fn($a, $b) => $a + $b, [10, 20])
             ->addTask('mul', fn($x, $y) => $x * $y, [5, 6])
             ->execute();
@@ -46,6 +50,7 @@ final class WorkflowBuilderTest extends TestCase
     public function build_workflow_with_channels(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addChannel('input', 10)
             ->addChannel('output', 10)
             ->execute();
@@ -63,24 +68,21 @@ final class WorkflowBuilderTest extends TestCase
     #[Test]
     public function build_workflow_with_bootstrap(): void
     {
-        $bootstrap = tempnam(sys_get_temp_dir(), 'bootstrap');
-        file_put_contents($bootstrap, '<?php // test bootstrap');
-
         $result = (new WorkflowBuilder())
-            ->withBootstrap($bootstrap)
+            ->withBootstrap($this->getBootstrapPath())
             ->addTask('task1', fn() => 'test')
             ->execute();
 
         $this->assertEquals('test', $result->getFuture('task1')?->value());
 
         $result->closeAll();
-        unlink($bootstrap);
     }
 
     #[Test]
     public function wait_all_returns_all_results(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addTask('task1', fn() => 1)
             ->addTask('task2', fn() => 2)
             ->addTask('task3', fn() => 3)
@@ -99,6 +101,7 @@ final class WorkflowBuilderTest extends TestCase
     public function get_all_futures(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addTask('task1', fn() => 1)
             ->addTask('task2', fn() => 2)
             ->execute();
@@ -114,6 +117,7 @@ final class WorkflowBuilderTest extends TestCase
     public function get_all_channels(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addChannel('ch1', 5)
             ->addChannel('ch2', 10)
             ->execute();
@@ -129,6 +133,7 @@ final class WorkflowBuilderTest extends TestCase
     public function close_all_resources(): void
     {
         $result = (new WorkflowBuilder())
+            ->withBootstrap($this->getBootstrapPath())
             ->addTask('task1', fn() => 1)
             ->addChannel('ch1', 5)
             ->execute();

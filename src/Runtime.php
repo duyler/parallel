@@ -22,7 +22,11 @@ final class Runtime extends ParallelWrapper implements RuntimeInterface
     public function __construct(?string $bootstrap = null)
     {
         try {
-            parent::__construct(new \parallel\Runtime($bootstrap));
+            $nativeRuntime = $bootstrap === null
+                ? new \parallel\Runtime()
+                : new \parallel\Runtime($bootstrap);
+
+            parent::__construct($nativeRuntime);
         } catch (\parallel\Runtime\Error\Bootstrap $e) {
             throw BootstrapException::fromNative($e);
         }

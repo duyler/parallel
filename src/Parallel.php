@@ -13,10 +13,16 @@ use Duyler\Parallel\Contract\RuntimeInterface;
 final class Parallel
 {
     private static ?RuntimePool $pool = null;
+    private static ?string $defaultBootstrap = null;
 
-    public static function runtime(): RuntimeInterface
+    public static function setDefaultBootstrap(?string $bootstrap): void
     {
-        return new Runtime();
+        self::$defaultBootstrap = $bootstrap;
+    }
+
+    public static function runtime(?string $bootstrap = null): RuntimeInterface
+    {
+        return new Runtime($bootstrap ?? self::$defaultBootstrap);
     }
 
     public static function channel(?int $capacity = null): ChannelInterface
@@ -33,14 +39,20 @@ final class Parallel
         return new Events();
     }
 
-    public static function pool(int $maxRuntimes = 4): RuntimePool
+    public static function pool(int $maxRuntimes = 4, ?string $bootstrap = null): RuntimePool
     {
-        return new RuntimePool($maxRuntimes);
+        return new RuntimePool($maxRuntimes, $bootstrap ?? self::$defaultBootstrap);
     }
 
-    public static function workflow(): WorkflowBuilder
+    public static function workflow(?string $bootstrap = null): WorkflowBuilder
     {
-        return new WorkflowBuilder();
+        $builder = new WorkflowBuilder();
+
+        if ($bootstrap !== null || self::$defaultBootstrap !== null) {
+            $builder->withBootstrap($bootstrap ?? self::$defaultBootstrap);
+        }
+
+        return $builder;
     }
 
     public static function run(Closure $task, array $argv = []): FutureInterface
@@ -59,7 +71,7 @@ final class Parallel
     private static function getPool(): RuntimePool
     {
         if (self::$pool === null) {
-            self::$pool = new RuntimePool();
+            self::$pool = new RuntimePool(4, self::$defaultBootstrap);
         }
 
         return self::$pool;

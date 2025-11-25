@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Duyler\Parallel\Test\Unit;
 
 use Duyler\Parallel\Contract\FutureInterface;
-use Duyler\Parallel\RuntimePool;
+use Duyler\Parallel\Test\RuntimeTestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class RuntimePoolTest extends TestCase
 {
+    use RuntimeTestHelper;
     #[Test]
     public function create_pool_with_default_size(): void
     {
-        $pool = new RuntimePool();
+        $pool = $this->createRuntimePool();
 
         $this->assertEquals(4, $pool->getMaxSize());
         $this->assertEquals(0, $pool->getSize());
@@ -23,7 +24,7 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function create_pool_with_custom_size(): void
     {
-        $pool = new RuntimePool(maxRuntimes: 8);
+        $pool = $this->createRuntimePool(maxRuntimes: 8);
 
         $this->assertEquals(8, $pool->getMaxSize());
     }
@@ -31,7 +32,7 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function run_task_creates_runtime(): void
     {
-        $pool = new RuntimePool(maxRuntimes: 2);
+        $pool = $this->createRuntimePool(maxRuntimes: 2);
 
         $future = $pool->run(function () {
             return 42;
@@ -45,7 +46,7 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function pool_reuses_runtimes_when_full(): void
     {
-        $pool = new RuntimePool(maxRuntimes: 2);
+        $pool = $this->createRuntimePool(maxRuntimes: 2);
 
         $pool->run(fn() => 1);
         $pool->run(fn() => 2);
@@ -60,7 +61,7 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function run_multiple_tasks_with_pool(): void
     {
-        $pool = new RuntimePool(maxRuntimes: 3);
+        $pool = $this->createRuntimePool(maxRuntimes: 3);
 
         $futures = [];
         for ($i = 1; $i <= 5; $i++) {
@@ -78,7 +79,7 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function close_all_runtimes(): void
     {
-        $pool = new RuntimePool(maxRuntimes: 2);
+        $pool = $this->createRuntimePool(maxRuntimes: 2);
 
         $pool->run(fn() => 1);
         $pool->run(fn() => 2);
@@ -93,7 +94,7 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function kill_all_runtimes(): void
     {
-        $pool = new RuntimePool(maxRuntimes: 2);
+        $pool = $this->createRuntimePool(maxRuntimes: 2);
 
         $pool->run(fn() => 1);
 
@@ -107,16 +108,12 @@ final class RuntimePoolTest extends TestCase
     #[Test]
     public function pool_with_bootstrap(): void
     {
-        $bootstrap = tempnam(sys_get_temp_dir(), 'bootstrap');
-        file_put_contents($bootstrap, '<?php // test bootstrap');
-
-        $pool = new RuntimePool(maxRuntimes: 2, bootstrap: $bootstrap);
+        $pool = $this->createRuntimePool(maxRuntimes: 2);
 
         $future = $pool->run(fn() => 'test');
 
         $this->assertEquals('test', $future->value());
 
         $pool->closeAll();
-        unlink($bootstrap);
     }
 }

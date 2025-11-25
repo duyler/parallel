@@ -8,6 +8,7 @@ use Duyler\Parallel\Contract\FutureInterface;
 use Duyler\Parallel\Exception\CancellationException;
 use Duyler\Parallel\Exception\ForeignException;
 use Override;
+use Throwable;
 
 final class Future extends ParallelWrapper implements FutureInterface
 {
@@ -27,11 +28,15 @@ final class Future extends ParallelWrapper implements FutureInterface
     {
         try {
             return $this->nativeInstance->value();
+        } catch (\parallel\Future\Error\Cancelled $e) {
+            throw CancellationException::fromNative($e);
         } catch (\parallel\Future\Error\Cancellation $e) {
             throw CancellationException::fromNative($e);
+        } catch (\parallel\Future\Error\Killed $e) {
+            throw ForeignException::fromNative($e);
         } catch (\parallel\Future\Error\Foreign $e) {
             throw ForeignException::fromNative($e);
-        } catch (\parallel\Future\Error\Killed $e) {
+        } catch (Throwable $e) {
             throw ForeignException::fromNative($e);
         }
     }

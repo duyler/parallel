@@ -9,12 +9,13 @@ use Duyler\Parallel\Contract\EventsInterface;
 use Duyler\Parallel\Events;
 use Duyler\Parallel\Events\Event;
 use Duyler\Parallel\Events\Type;
-use Duyler\Parallel\Runtime;
+use Duyler\Parallel\Test\RuntimeTestHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class EventsTest extends TestCase
 {
+    use RuntimeTestHelper;
     #[Test]
     public function create_events(): void
     {
@@ -27,7 +28,7 @@ final class EventsTest extends TestCase
     #[Test]
     public function add_future_to_events(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 1;
         });
@@ -84,7 +85,7 @@ final class EventsTest extends TestCase
     #[Test]
     public function poll_returns_event_when_future_ready(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 42;
         });
@@ -126,7 +127,7 @@ final class EventsTest extends TestCase
     #[Test]
     public function remove_future_from_events(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             sleep(10);
             return 1;
@@ -145,7 +146,7 @@ final class EventsTest extends TestCase
     #[Test]
     public function event_has_correct_type(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 1;
         });
@@ -161,7 +162,7 @@ final class EventsTest extends TestCase
     #[Test]
     public function event_has_correct_source(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 1;
         });
@@ -177,7 +178,7 @@ final class EventsTest extends TestCase
     #[Test]
     public function event_has_correct_value(): void
     {
-        $runtime = new Runtime();
+        $runtime = $this->createRuntime();
         $future = $runtime->run(function () {
             return 42;
         });
