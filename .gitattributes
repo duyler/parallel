@@ -1,7 +1,0 @@
-/.*          export-ignore
-/docs        export-ignore
-/examples    export-ignore
-/*.lock      export-ignore
-/*.dist      export-ignore
-.gitattributes export-ignore
-.gitignore   export-ignore
