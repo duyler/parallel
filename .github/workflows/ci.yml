@@ -9,21 +9,26 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+
+    # Используем ваш кастомный образ как контейнер для всего job
+    container:
+      image: duyler/php-zts:latest
+      options: --user root
+
     strategy:
       matrix:
-        php-version: ['8.4']
+        # Если у вас есть разные теги для версий PHP, можно указать их здесь
+        php-image: ['duyler/php-zts:latest']
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          extensions: parallel
-          ini-values: zend.assertions=1
-          coverage: none
-          tools: composer:v2
+      - name: Check PHP and extensions
+        run: |
+          php -v
+          php -m | grep parallel
+          composer --version || echo "Composer not installed"
 
       - name: Validate composer.json
         run: composer validate --strict
